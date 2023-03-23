@@ -1,0 +1,745 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>redis</title>
+    <link href="/2023/03/23/redis/"/>
+    <url>/2023/03/23/redis/</url>
+    
+    <content type="html"><![CDATA[<h4 id="缓存与数据库双写不一致问题"><a href="#缓存与数据库双写不一致问题" class="headerlink" title="缓存与数据库双写不一致问题"></a>缓存与数据库双写不一致问题</h4><p><img src="/images/redis%E7%BC%93%E5%AD%98%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E5%8F%8C%E5%86%99%E4%B8%8D%E4%B8%80%E8%87%B4%E9%97%AE%E9%A2%98.png"><br>1.给缓存设置过期时间<br>2.延迟双删除<br>3.利用分布式锁解决 更新数据库和缓存的时候单线程 注意粒度 性能慢 </p><p>CREATE TABLE <code>t_workflow_alarm</code> (<br>  <code>id</code> bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT ‘数据编号’,<br>  <code>title</code> varchar(256) NOT NULL DEFAULT ‘’ COMMENT ‘工单标题’,<br>  <code>workflow_status</code> int(11) NOT NULL DEFAULT ‘0’ COMMENT ‘工单状态’,<br>  <code>status</code> int(11) NOT NULL DEFAULT ‘0’ COMMENT ‘数据状态’,<br>  <code>plan_time</code> datetime COMMENT ‘期望完成时间’,<br>  <code>description</code> longtext COMMENT ‘告警详情’,<br>  <code>findings</code> longtext COMMENT ‘调查结果’,<br>  <code>dispose</code> longtext COMMENT ‘处置建议’,<br>  <code>rectification</code> longtext COMMENT ‘整改方案’,<br>  <code>remark</code> longtext COMMENT ‘备注评论’,<br>  <code>alarm_id</code> varchar(256) NOT NULL DEFAULT ‘’ COMMENT ‘告警编号’,<br>  <code>alarm_ip</code> varchar(32) NOT NULL DEFAULT ‘’ COMMENT ‘告警ip’,<br>  <code>alarm_type</code> int(11) NOT NULL DEFAULT ‘0’ COMMENT ‘告警类型’,<br>  <code>uri</code> longtext COMMENT ‘多个uri以|分割’,<br>  <code>cve</code> varchar(256) NOT NULL DEFAULT ‘’ COMMENT ‘cve编号’,<br>  <code>srmId</code> bigint(20) NOT NULL DEFAULT ‘0’ COMMENT ‘农信工单id’,<br>  <code>alarm_ids</code> longtext COMMENT ‘警id列表,多个以,分割’,<br>  PRIMARY KEY (<code>id</code>)<br>) ENGINE&#x3D;InnoDB DEFAULT CHARSET&#x3D;utf8 COMMENT&#x3D;’告警处置工单表’;</p><p> alarm_ipvarchar(32)告警ip<br>urilongtext多个uri以|分割<br>cvevarchar(256)cve编号<br>srmIdbigint(20)农信工单id<br>alarm_idslongtext告警id列表,多个以,分割</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>redis</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>redis</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Mysql优化相关</title>
+    <link href="/2023/03/23/MySql%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB/"/>
+    <url>/2023/03/23/MySql%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB/</url>
+    
+    <content type="html"><![CDATA[<h4 id="Innodb是如何支持范围查找能走索引的"><a href="#Innodb是如何支持范围查找能走索引的" class="headerlink" title="Innodb是如何支持范围查找能走索引的"></a>Innodb是如何支持范围查找能走索引的</h4><p> select name from user where id &gt;6; 先利用索引查询id&#x3D;6的情况 在得出&gt;6 B+树</p><h4 id="遵守最左前缀原则才能利用联合索引查询"><a href="#遵守最左前缀原则才能利用联合索引查询" class="headerlink" title="遵守最左前缀原则才能利用联合索引查询"></a>遵守最左前缀原则才能利用联合索引查询</h4><h4 id="走索引不一定比全表扫描快，看需要回表的次数"><a href="#走索引不一定比全表扫描快，看需要回表的次数" class="headerlink" title="走索引不一定比全表扫描快，看需要回表的次数"></a>走索引不一定比全表扫描快，看需要回表的次数</h4><h4 id="索引扫描的底层原理"><a href="#索引扫描的底层原理" class="headerlink" title="索引扫描的底层原理"></a>索引扫描的底层原理</h4><p> select id from user id为索引时也是默认走的索引查询。全表扫描查的是全部字段的所有数据值，索引查的是id字段的所有数据值。</p><h4 id="order-by会导致索引失效"><a href="#order-by会导致索引失效" class="headerlink" title="order by会导致索引失效"></a>order by会导致索引失效</h4><p> mysql认为走全表扫描比索引速度更快，全表扫描不需要回表，在内存中经行排序，走索引需要回表但是不需要额外排序。综合起来还是全表扫描比较快。</p><h4 id="mysql读写分离（复制原理）"><a href="#mysql读写分离（复制原理）" class="headerlink" title="mysql读写分离（复制原理）"></a>mysql读写分离（复制原理）</h4><p> mysql一次插入的时候会生成binlog日志-&gt;从库的io线程会获得binlog日志-&gt;生成relaylog-&gt;解析成从库数据插入</p><h4 id="分库分表"><a href="#分库分表" class="headerlink" title="分库分表"></a>分库分表</h4><p> 对某个字段进行hash然后取模放到对应的表中<br> 对时间进行分表（一月、二月等等）</p><h4 id="聚簇索引和非聚簇索引的区别"><a href="#聚簇索引和非聚簇索引的区别" class="headerlink" title="聚簇索引和非聚簇索引的区别"></a>聚簇索引和非聚簇索引的区别</h4><p>  聚簇索引：将数据存储与索引放到了一块，并且是按照一定的顺序组织的，找到索引也就找到了数据，数据的物理存放顺序是一直的，即索引是相邻的那么对应的数据一定也是相邻的存放在磁盘上的。<br>  非聚簇索引：叶子节点不存储数据，存储的是数据行地址，也就是说根据索引查找到数据行的位置再去磁盘查找数据。<br>  优势：通过聚簇索引可以直接获取数据不需要二次查询要率告<br>        聚簇索引对于范围查询的效率很高，因为其数据是按照大小排序的<br>        聚簇索引适用在排序的场合，非聚簇索引不适合<br>  劣势：索引的维护很昂贵<br>        表因为使用uuid作为主键，使数据存储稀疏，可能会出现聚簇索引比全表扫描更慢，建议使用自增序列作为主键<br>        如果主键比较大的话，那辅助索引将会变得更大，引文辅助索引的叶子存储的使主键值，过长的主键值会导致非叶子节点占用更多的物理空间</p><h4 id="索引选择"><a href="#索引选择" class="headerlink" title="索引选择"></a>索引选择</h4><p>  除开单条记录查询选择hash索引，其余部分建议选择BTree索引</p><h4 id="索引设计的原则"><a href="#索引设计的原则" class="headerlink" title="索引设计的原则"></a>索引设计的原则</h4><p>  查询更快，占用空间更小<br>  1.适合索引的列是出现在where子句中的列，或者连接子句中指定的列<br>  2.基数较小的表，索引效果差，没必要建立索引<br>  3.使用短索引，如果对长字符串列进行索引，应该指定一个前缀长度，这样能够节省大量索引空间，如果搜索词超过所有前缀长度，则使用索引排除不匹配的行，然后检查其余行是否可能匹配<br>  4.不要过度索引，索引需要额外的磁盘空间。<br>  5.定义有外键的数据列一定要建立索引。<br>  6.更新频繁的字段不适合建立索引<br>  7.对于查询中很少涉及的列，重复值比较多的列不要建立索引<br>  8.定义为text、image和bit的数据类型不要建立索引</p><h4 id="怎么处理慢查询"><a href="#怎么处理慢查询" class="headerlink" title="怎么处理慢查询"></a>怎么处理慢查询</h4>]]></content>
+    
+    
+    <categories>
+      
+      <category>Mysql</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Mysql</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Java多线程与高并发2</title>
+    <link href="/2023/03/23/Mysql/"/>
+    <url>/2023/03/23/Mysql/</url>
+    
+    <content type="html"><![CDATA[<h4 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h4><p> 1.使用已存在的线程，消除了线程创建的时耗。<br> 2.通过设置线程数目，防止资源不足。<br> 3.ThreadPoolExecutor：corePoolSize：线程池中的核心线程数（不会被销毁） maximumPoolSize:线程池中能拥有的最多线程数 workQueue：用于缓存任务的阻塞队列 keepAliveTime:空闲线程的存活时间 handler:表示当workQueue已满，且池中的线程数达到最大线程数时，线程池拒绝添加线程的策略。<br> 4.newCachedThreadPool: 工作的线程创建数量几乎没有限制，空闲的线程会自动销毁，使用时需要注意控制任务的数量，否则大量线程同时运行，会造成系统瘫痪。<br> 5.newFixedThreadPool：创建一个固定线程数量的线程池，不会自动销毁空闲的线程池，浪费资源，根据业务需求使用。<br> 6.newSingleThreadExecutor：创建一个单线程化的Executor，保证所有任务按照指定顺序执行，感觉不如单线程。<br> 7.newScheduleThreadPool：线程执行周期性的任务。</p><h4 id="Callable"><a href="#Callable" class="headerlink" title="Callable"></a>Callable</h4><p> 1.优点：可以有返回值。<br> 2.缺点：当没有返回值的时候线程会阻塞，在线程很多时可能会导致线程爆炸。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Java</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>多线程</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Java多线程与高并发</title>
+    <link href="/2023/03/23/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
+    <url>/2023/03/23/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B/</url>
+    
+    <content type="html"><![CDATA[<h4 id="锁（synchronized，ReentrantLock……）"><a href="#锁（synchronized，ReentrantLock……）" class="headerlink" title="锁（synchronized，ReentrantLock……）"></a>锁（synchronized，ReentrantLock……）</h4><p> 多个锁都是自己本身，互相调用<br> <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs scala">public <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ThreadTest</span> </span>&#123;<br>    synchronized void test() &#123;<br>        <span class="hljs-type">System</span>.out.println(<span class="hljs-string">&quot;test....start&quot;</span>);<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-type">TimeUnit</span>.<span class="hljs-type">SECONDS</span>.sleep(<span class="hljs-number">1</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (<span class="hljs-type">Exception</span> e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>        <span class="hljs-type">System</span>.out.println(<span class="hljs-string">&quot;test....end&quot;</span>);<br>    &#125;<br>&#125;<br><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">test2</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ThreadTest</span> </span>&#123;<br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-comment">// 锁的对象是this</span><br>    synchronized void test() &#123;<br>        <span class="hljs-type">System</span>.out.println(<span class="hljs-string">&quot;child test2 start&quot;</span>);<br>        <span class="hljs-comment">// 锁的对象也是this</span><br>        <span class="hljs-keyword">super</span>.test();<br>        <span class="hljs-type">System</span>.out.println(<span class="hljs-string">&quot;child test2 end&quot;</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><br>synchronized 底层：互斥锁，悲观锁，同步锁，重量级锁（jdk1.6之前）<br>1.悲观锁（Pessimistic Lock）： 就是很悲观，每次去拿数据的时候都认为别人会修改。所以每次在拿数据的时候都会上锁。这样别人想拿数据就被挡住，直到悲观锁被释放，悲观锁中的共享资源每次只给一个线程使用，其它线程阻塞，用完后再把资源转让给其它线程。<br>但是在效率方面，处理加锁的机制会产生额外的开销，还有增加产生死锁的机会。另外还会降低并行性，如果已经锁定了一个线程A，其他线程就必须等待该线程A处理完才可以处理<br>数据库中的行锁，表锁，读锁（共享锁），写锁（排他锁），以及syncronized实现的锁均为悲观锁<br>2.乐观锁（Optimistic Lock）： 就是很乐观，每次去拿数据的时候都认为别人不会修改。所以不会上锁，但是如果想要更新数据，则会在更新前检查在读取至更新这段时间别人有没有修改过这个数据。如果修改过，则重新读取，再次尝试更新，循环上述步骤直到更新成功（当然也允许更新失败的线程放弃操作）,乐观锁适用于多读的应用类型，这样可以提高吞吐量<br>相对于悲观锁，在对数据库进行处理的时候，乐观锁并不会使用数据库提供的锁机制。一般的实现乐观锁的方式就是记录数据版本（version）或者是时间戳来实现，不过使用版本记录是最常用的。<br>3.互斥锁加锁失败后，线程释放CPU，给其他线程；<br>4.自旋锁加锁失败后，线程会忙等待，直到它拿到锁；<br>自旋锁开销少，在多核系统下一般不会主动产生线程切换，适合异步、协程等在用户态切换请求的编程方式，但如果被锁住的代码执行时间过长，自旋的线程会长时间占用 CPU 资源，所以自旋的时间和被锁住的代码执行的时间是成「正比」的关系，我们需要清楚的知道这一点。<br>————–锁状态：<br>偏向锁 -&gt;轻量级锁-&gt;重量级锁    锁升级<br>ReentrantLock 默认情况下是非公平锁<br>5.公平锁<br>每个线程获取锁的顺序是按照线程访问锁的先后顺序获取的，最前面的线程总是最先获取到锁。<br>6.非公平锁<br>每个线程获取锁的顺序是随机的，并不会遵循先来先得的规则，所有线程会竞争获取锁<br>7.AQS<br>是一个抽象的队列同步器，通过维护一个共享资源状态（ Volatile Int State ）和一个先进先出（ FIFO ）的线程等待队列来实现一个多线程访问共享资源的同步框架.</p><h4 id="异常和锁"><a href="#异常和锁" class="headerlink" title="异常和锁"></a>异常和锁</h4><p> 程序在执行过程中如果出现异常，默认情况锁会被释放，所以在并发处理的过程中，有异常要多加小心，否则会发生不一致的情况。</p><h4 id="避免死锁-jstack查看是否死锁"><a href="#避免死锁-jstack查看是否死锁" class="headerlink" title="避免死锁  jstack查看是否死锁"></a>避免死锁  jstack查看是否死锁</h4><p> 1.有序资源分配法：各个资源必须按顺序使用。<br> 2.银行家算法<br> 3.顺序加锁：多个线程需要相同的锁，但是按照不同的顺序加锁，会导致死锁，顺序加锁则会避免。<br> 4.限时加锁：查过时间放弃对该锁的请求。（加锁时间不能相同） synchronized不可以加时间限制，需要自定义锁。</p><h4 id="多线程特性"><a href="#多线程特性" class="headerlink" title="多线程特性"></a>多线程特性</h4><p> 1.原子性<br> 2.可见性 一个线程修改了数据其他线程能够立即得到修改的值<br> 3.有序性</p><h4 id="CAS-Compare-And-Swap"><a href="#CAS-Compare-And-Swap" class="headerlink" title="CAS(Compare And Swap)"></a>CAS(Compare And Swap)</h4><p> 实现思想 CAS（V,A,B），V为内存地址、A为预期原值，B为新值。如果内存地址的值与预期原值相匹配，那么将该位置值更新为新值。否则，说明已经被其他线程更新，处理器不做任何操作；无论哪种情况，它都会在 CAS 指令之前返回该位置的值。而我们可以使用自旋锁，循环CAS，重新读取该变量再尝试再次修改该变量，也可以放弃操作。<br> CAS缺点<br>　　CAS有几个缺点：<br>　　1、ABA问题。当第一个线程执行CAS操作，尚未修改为新值之前，内存中的值已经被其他线程连续修改了两次，使得变量值经历 A -&gt; B -&gt; A的过程。<br>　　解决方案：添加版本号作为标识，每次修改变量值时，对应增加版本号； 做CAS操作前需要校验版本号。JDK1.5之后，新增AtomicStampedReference类来处理这种情况。<br>　　2、循环时间长开销大。如果有很多个线程并发，CAS自旋可能会长时间不成功，会增大CPU的执行开销。<br>　　3、只能对一个变量进原子操作。JDK1.5之后，新增AtomicReference类来处理这种情况，可以将多个变量放到一个对象中。</p><h4 id="Lock"><a href="#Lock" class="headerlink" title="Lock"></a>Lock</h4><p> 1.ReentrantLock(可重入锁)<br> 2.ReadWriteLock(读写锁：可同时读，读时不可写；写时不可读，不可同时写)</p><h4 id="Volatile-关键字"><a href="#Volatile-关键字" class="headerlink" title="Volatile 关键字"></a>Volatile 关键字</h4><p> 1.保证了可见性（不保证原子性）<br> 2.禁止进行指令重排序（保证有序性）<br> 3.对变量的写操作不依赖于当前的值和该变量没有与其他变量一起使用时应用该关键字</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Java</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>多线程</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Java多线程与高并发2</title>
+    <link href="/2023/03/23/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%E6%80%BB%E7%BB%93/"/>
+    <url>/2023/03/23/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%E6%80%BB%E7%BB%93/</url>
+    
+    <content type="html"><![CDATA[<h4 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h4><p> 1.使用已存在的线程，消除了线程创建的时耗。<br> 2.通过设置线程数目，防止资源不足。<br> 3.ThreadPoolExecutor：corePoolSize：线程池中的核心线程数（不会被销毁） maximumPoolSize:线程池中能拥有的最多线程数 workQueue：用于缓存任务的阻塞队列 keepAliveTime:空闲线程的存活时间 handler:表示当workQueue已满，且池中的线程数达到最大线程数时，线程池拒绝添加线程的策略。<br> 4.newCachedThreadPool: 工作的线程创建数量几乎没有限制，空闲的线程会自动销毁，使用时需要注意控制任务的数量，否则大量线程同时运行，会造成系统瘫痪。<br> 5.newFixedThreadPool：创建一个固定线程数量的线程池，不会自动销毁空闲的线程池，浪费资源，根据业务需求使用。<br> 6.newSingleThreadExecutor：创建一个单线程化的Executor，保证所有任务按照指定顺序执行，感觉不如单线程。<br> 7.newScheduleThreadPool：线程执行周期性的任务。</p><h4 id="Callable"><a href="#Callable" class="headerlink" title="Callable"></a>Callable</h4><p> 1.优点：可以有返回值。<br> 2.缺点：当没有返回值的时候线程会阻塞，在线程很多时可能会导致线程爆炸。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Java</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>多线程</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Java多线程与高并发2</title>
+    <link href="/2023/03/23/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%BA%BF%E7%A8%8B%E6%B1%A0/"/>
+    <url>/2023/03/23/Java%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%BA%BF%E7%A8%8B%E6%B1%A0/</url>
+    
+    <content type="html"><![CDATA[<h4 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h4><p> 1.使用已存在的线程，消除了线程创建的时耗。<br> 2.通过设置线程数目，防止资源不足。<br> 3.ThreadPoolExecutor：corePoolSize：线程池中的核心线程数（不会被销毁） maximumPoolSize:线程池中能拥有的最多线程数 workQueue：用于缓存任务的阻塞队列 keepAliveTime:空闲线程的存活时间 handler:表示当workQueue已满，且池中的线程数达到最大线程数时，线程池拒绝添加线程的策略。<br> 4.newCachedThreadPool: 工作的线程创建数量几乎没有限制，空闲的线程会自动销毁，使用时需要注意控制任务的数量，否则大量线程同时运行，会造成系统瘫痪。<br> 5.newFixedThreadPool：创建一个固定线程数量的线程池，不会自动销毁空闲的线程池，浪费资源，根据业务需求使用。<br> 6.newSingleThreadExecutor：创建一个单线程化的Executor，保证所有任务按照指定顺序执行，感觉不如单线程。<br> 7.newScheduleThreadPool：线程执行周期性的任务。</p><h4 id="Callable"><a href="#Callable" class="headerlink" title="Callable"></a>Callable</h4><p> 1.优点：可以有返回值。<br> 2.缺点：当没有返回值的时候线程会阻塞，在线程很多时可能会导致线程爆炸。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Java</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>多线程</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>MySql索引的基本原理</title>
+    <link href="/2023/02/16/MySql%E7%B4%A2%E5%BC%95%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/"/>
+    <url>/2023/02/16/MySql%E7%B4%A2%E5%BC%95%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</url>
+    
+    <content type="html"><![CDATA[<p> 本质是通过不断的缩小先要获取数据的范围来筛选出最终想要的结果。MySql主要用到两种结构：B+Tree索引和Hash索引。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Mysql</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Mysql</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>JAVA引用类型总结</title>
+    <link href="/2023/02/16/JAVA%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E6%80%BB%E7%BB%93/"/>
+    <url>/2023/02/16/JAVA%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E6%80%BB%E7%BB%93/</url>
+    
+    <content type="html"><![CDATA[<h4 id="强引用"><a href="#强引用" class="headerlink" title="强引用"></a>强引用</h4><p> <code> Person person = new person(); person = null;</code> 此时person没有任何对象指向它，会被垃圾回收机制回收。</p><h4 id="软引用"><a href="#软引用" class="headerlink" title="软引用"></a>软引用</h4><p> <code> SoftReference&lt;byte[]&gt; sr = new SoftReference&lt;&gt;(new byte[1024*1024*10])</code>; 此时sr是软引用，如果此时有一个引用如<code>byte[] b = new byte[1024*1024*10] </code>        导致JVM内存不够的时候，会把sr回收掉，不会报OOM的异常。一般使用在缓存场景，由SoftReference包装。</p><h4 id="弱引用"><a href="#弱引用" class="headerlink" title="弱引用"></a>弱引用</h4><p> <code>WeakReference&lt;M&gt; wr = new WeakReference&lt;&gt;(new Person()); </code><br>    垃圾回收器发现就会回收该对象。</p><p><code>ThreadLocal&lt;Person&gt; tl = new ThreadLocal();     tl.set(new Person());     tl.remove(); </code><br>    ThreadLocal 每个线程是自己私有的，其他线程访问不到。</p><h4 id="虚引用"><a href="#虚引用" class="headerlink" title="虚引用"></a>虚引用</h4><p> 堆外内存使用 </p>]]></content>
+    
+    
+    <categories>
+      
+      <category>JAVA</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>JAVA</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>单例模式</title>
+    <link href="/2022/11/04/%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/"/>
+    <url>/2022/11/04/%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/</url>
+    
+    <content type="html"><![CDATA[<pre><code class="hljs">是创建型模式，采取一定的方法保证在整个软件系统中，对某个类只能存在一个对象实例，并且该类只提供一个获取对象的方法。</code></pre><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment">* 这里只写三种推荐使用的方法</span><br><span class="hljs-comment">*/</span><br></code></pre></td></tr></table></figure><h4 id="懒汉式-双重检查"><a href="#懒汉式-双重检查" class="headerlink" title="懒汉式(双重检查)"></a>懒汉式(双重检查)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 懒汉式 双重检查</span><br><span class="hljs-comment"> * 推荐使用</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Singleton</span> &#123;<br>    <span class="hljs-comment">//volatile 等于一个轻量级的synchronized 会把修改值立即更新到主存</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">volatile</span> Singleton instance;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-title function_">Singleton</span><span class="hljs-params">()</span> &#123;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Singleton <span class="hljs-title function_">getInstance</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">if</span> (instance == <span class="hljs-literal">null</span>) &#123;<br>            <span class="hljs-keyword">synchronized</span> (Singleton.class) &#123;<br>                <span class="hljs-keyword">if</span> (instance == <span class="hljs-literal">null</span>) &#123;<br>                    instance = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Singleton</span>();<br>                &#125;<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">return</span> instance;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><h4 id="懒汉式-静态内部类"><a href="#懒汉式-静态内部类" class="headerlink" title="懒汉式(静态内部类)"></a>懒汉式(静态内部类)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 懒汉式 静态内部类</span><br><span class="hljs-comment"> * 内部类线程安全 推荐使用</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Singleton</span> &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-title function_">Singleton</span><span class="hljs-params">()</span>&#123;&#125;<br>    <span class="hljs-comment">//装载Singleton的时候 静态内部类不会被装载  保证了懒加载</span><br>    <span class="hljs-comment">//JVM在装载类的时候是线程安全的</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">SingletonInstance</span>&#123;<br>        <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Singleton</span> <span class="hljs-variable">INSTANCE</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Singleton</span>();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Singleton <span class="hljs-title function_">getInstance</span><span class="hljs-params">()</span>&#123;<br>        <span class="hljs-keyword">return</span> SingletonInstance.INSTANCE;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><h4 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 枚举方法实现单例模式</span><br><span class="hljs-comment"> * 推荐使用</span><br><span class="hljs-comment"> * 不仅可以避免多线程问题，还能防止反序列化重新创建新的对象</span><br><span class="hljs-comment"> * 单例模式在对象需要被频繁创建销毁的时候使用，如一些工具类等情况，或者需要保持每次对象一直的时候使用</span><br><span class="hljs-comment"> * 每个人的剧本里都会有值得的事情，所以你才会选择这个剧本来到人世间，加油让这个事情早点遇到。</span><br><span class="hljs-comment"> */</span><br> <span class="hljs-keyword">enum</span> <span class="hljs-title class_">Singleton</span>&#123;<br>    INSTANCE;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">method</span><span class="hljs-params">()</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;OK&quot;</span>);<br>    &#125;<br>&#125;<br> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Test</span>&#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span>&#123;<br>        <span class="hljs-type">Singleton</span> <span class="hljs-variable">instance</span> <span class="hljs-operator">=</span> Singleton.INSTANCE;<br>        <span class="hljs-type">Singleton</span> <span class="hljs-variable">instance2</span> <span class="hljs-operator">=</span> Singleton.INSTANCE;<br>        System.out.println(instance == instance2);<span class="hljs-comment">// 可以得到是同一个对象</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>设计模式</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>sentinel</title>
+    <link href="/2022/10/20/SpringCloudAlibaba-Sentinel/"/>
+    <url>/2022/10/20/SpringCloudAlibaba-Sentinel/</url>
+    
+    <content type="html"><![CDATA[<p>Spring Cloud Sentinel 分布式系统的流量防卫兵。从流量控制，熔断降级，系统负载保护等多个维度保护服务的稳定性。<br>三大核心概念：<br>　　1.Route(路由)<br>　　2.Predicate(断言)<br>　　3.Filter(过滤)</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Spring</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>gateway</title>
+    <link href="/2022/10/20/SpringCloud-gateway/"/>
+    <url>/2022/10/20/SpringCloud-gateway/</url>
+    
+    <content type="html"><![CDATA[<p>Spring Cloud Gateway 提供统一的路由方式且基于Filter链的方式提供了网关的基本功能，如：安全，监控&#x2F;指标，和限流。使用的是Webflux重的reactor-netty响应式编程组件，底层使用了Netty通讯框架。<br>三大核心概念：<br>　　1.Route(路由)<br>　　2.Predicate(断言)<br>　　3.Filter(过滤)</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Spring</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>DockerCommit镜像</title>
+    <link href="/2022/09/21/DockerFile/"/>
+    <url>/2022/09/21/DockerFile/</url>
+    
+    <content type="html"><![CDATA[<p> docker commit 提交容器成为一个新的副本<br> docker commit -m&#x3D;”提交的描述信息” -a&#x3D;”作者” 容器id 目标镜像名</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Docker</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Docker</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Docker容器数据卷</title>
+    <link href="/2022/09/20/Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/"/>
+    <url>/2022/09/20/Docker%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7/</url>
+    
+    <content type="html"><![CDATA[<p> 一、什么是容器数据卷<br>     将应用和环境打包成一个镜像，如果数据都在容器中，那么我们删除容器，数据就会丢失！<font color="#660000">需求：数据可以持久化</font><br><img src="/images/docker%E7%AB%AF%E5%8F%A3%E6%9A%B4%E9%9C%B2.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Docker</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Docker</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>DockerCommit镜像</title>
+    <link href="/2022/09/20/DockerCommit%E9%95%9C%E5%83%8F/"/>
+    <url>/2022/09/20/DockerCommit%E9%95%9C%E5%83%8F/</url>
+    
+    <content type="html"><![CDATA[<p> docker commit 提交容器成为一个新的副本<br> docker commit -m&#x3D;”提交的描述信息” -a&#x3D;”作者” 容器id 目标镜像名</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Docker</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Docker</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Docker常用其他命令</title>
+    <link href="/2022/09/20/Docker%E5%B8%B8%E7%94%A8%E5%85%B6%E4%BB%96%E5%91%BD%E4%BB%A4/"/>
+    <url>/2022/09/20/Docker%E5%B8%B8%E7%94%A8%E5%85%B6%E4%BB%96%E5%91%BD%E4%BB%A4/</url>
+    
+    <content type="html"><![CDATA[<p> 一、常用其他命令<br>      1.后台启动命令 docker run -d 镜像名 常见的坑：docker容器使用后台运行，就必须要有一个前台进程，docker发现没有应用，就会自动停止。<br>      2.查看日志 docker logs -tf – tail [行数] 容器<br>      3.查看容器中进程信息 docker top 容器id<br>      4.查看镜像元数据 docker inspect 容器id<br>      5.进入当前正在运行的命令<br>      　a.docker exec -it 容器id &#x2F;bin&#x2F;bash   进入容器后开启一个新的终端，可以在里面操作<br>      　b.docker attach 容器id 进去容器正在执行的终端，不会启动新的进程<br>      6.从容器内拷贝文件到主机上 docker cp 容器id：容器路径 目的主机路径<br> 二、安装插件基本步骤<br>     1.搜索插件 docker search<br>     2.下载下来 docker pull<br>     3.启动 docker run -d -p 1009:8080 –name tomcat1 tomcat 对外可以用1009访问<br><img src="/images/docker%E7%AB%AF%E5%8F%A3%E6%9A%B4%E9%9C%B2.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Docker</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Docker</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Docker基本命令</title>
+    <link href="/2022/09/20/Docker%E5%9F%BA%E6%9C%AC%E5%91%BD%E4%BB%A4/"/>
+    <url>/2022/09/20/Docker%E5%9F%BA%E6%9C%AC%E5%91%BD%E4%BB%A4/</url>
+    
+    <content type="html"><![CDATA[<p> 一、底层原理<br>     Docker是一个Client-Service机构的系统，Docker的守护进程运行在主机上。通过Socket从客户端访问！Servev接到Client的指令就会执行这个命令。<br>     　docker有着比虚拟机更少的抽象层（服务直接安装在操作系统上）快！<br>     　docker利用的是宿主机的内核，vm需要是Guest Os。快！<br> 二、镜像命令<br>     docker images 查看本地主机上的所有镜像信息<br>     docker search 搜索镜像<br>     docker pull 下载镜像<br>     docker rml 删除镜像<br> 三、容器命令<br>     docker run[可选参数] image 运行指定镜像<br>     exit 从容器中退出到主机<br>     docker ps 列出所有的运行的容器<br>     docker rm [-f][{docker ps -aq}]容器id 删除指定[所有]容器<br>     docker start 容器id     启动容器<br>     docker restart 容器id 重启容器<br>     docker stop 容器id 停止容器<br>     docker kill 容器id 强行停止容器<br><img src="/images/docker%E5%8E%9F%E7%90%86.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Docker</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Docker</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Kafka线上优化</title>
+    <link href="/2022/09/19/Kafka%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E4%BC%98%E5%8C%96/"/>
+    <url>/2022/09/19/Kafka%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E4%BC%98%E5%8C%96/</url>
+    
+    <content type="html"><![CDATA[<p> 一、如何防止消息丢失<br>     1.发送方：ack是1或者-1&#x2F;all可以防止消息丢失，如果要做到99.9999%，ack设成all，把min.insync.replicas配置成分区备份数（返回ack才算成功否则一直发）<br>     2.消费方：把自动提交改为手动提交<br> 二、如何防止消息的重复消费<br>     在防止消息丢失的方案中，如果生产者发送完消息后，因为网络问题没有收到ack，但实际上broker已经收到了，此时生产者会进行重试，导致broker收到多条相同的消息。<br>     通过消息的幂等性来解决消息的重复消费问题。<br>     1.在数据库中传教联合主键，防止相同的主键创建出多条记录<br>     2.分布式锁（redis）<br> 三、如何做到顺序消费（RocketMQ）<br>     1.发送方：在发送时将ack不能设置0，关闭重试，使用同步发送，等到发送成功在发送下一条，保证消息时顺序发送的。<br>     2.接收方，消息时发送到一个分区中，只能有一个消费组的消费者来接收消息。<br>     因此kafka的顺序消费会牺牲性能<br> 四、解决消息积压问题<br>     消费者的消费速度远赶不上生产者的生产速度，导致kafka中有大量的数据没有被消费，随着没有被消费的数据堆积越来越多，消费者寻址的性能会越来越差，最后导致整个kafka对外提供的服务的性能很差，从而造成其他服务访问速度也变慢，造成服务雪崩。</p><pre><code class="hljs"> 解决：在这个消费者中，使用多线程，充分利用机器的性能经行消费消息。       增大partion数量，       增加消费组服务数量       kafka单机升级成了集群       避免消费者消费消息时间过长，导致超时</code></pre><p> 五、延迟队列<br>     消费消息的时候判断消息的创建时间和当前时间是否达到设定的延迟时间，如果否，记录当前的offset，并不在继续消费，等到下次poll消息。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Kafka</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Kafka</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Kafka运用</title>
+    <link href="/2022/09/14/Kafka%E8%BF%90%E7%94%A8/"/>
+    <url>/2022/09/14/Kafka%E8%BF%90%E7%94%A8/</url>
+    
+    <content type="html"><![CDATA[<p> 一、生产者端的同步和异步发送<br>     1.同步：如果生产者发送的消息没有收到ack，生产者会阻塞3s的时间，如果还没有收到消息，会进行重试。重试的次数3次。<br>     　ACK配置<br>     　　a.ack &#x3D; 0：kafka-cluster不需要任何的broker收到消息，就立即返回ack给生产者。<font color="#660000">最容易丢消息的，效率最高。</font><br>     　　b.ack &#x3D; 1：多副本之间的leader已经收到消息，并把消息写入到本地的log中，才会返回ack给生产者。<font color="#660000">性能和安全性是最均衡的。</font><br>     　　c.ack &#x3D; -1&#x2F;all：里面有默认的配置min.insync.replicas&#x3D;2(默认为1，推荐配置大于等于2)。<font color="#660000">最安全，性能最差</font><br>     2.异步：生产者发送完消息后就可以执行之后的业务，broker在收到消息后异步调用生产者提供的callback回调方法。<br> 二、offset（偏移量）<br>     1.消费者offset的自动提交和手动提交：<br>     　a.手动提交：消费完消息后手动进行提交。<br>     　　．手动同步提交：消费完消息后调用同步提交方法，当集群返回ack前一直阻塞，返回ack后表示成功，执行之后的逻辑。<br>     　　．手动异步提交：消费完消息后不需要等到ack返回直接执行之后的逻辑。<br>     　b.自动提交：消费者poll到消息后默认情况下，会自动向broler的_consumer_offset主题提交当前主题-分区的消费偏移量。<font color="#660000"><br>     会丢消息：如果poll下来的消息还未被消费，消费者挂了此时poll下来的消息就会丢失</font><br>     2.poll消息：<br>     　ａ.while(true){&#x2F;&#x2F;配置时间内poll消息：如果时间内poll到500（可配置）条则直接执行for循环逻辑代码，如果没有到500条则继续poll知道消息到500条或者到设定时间}<br>     　ｂ.如果两次poll的时间超过30s的时间间隔，kafka会任务其消费能力弱，将其踢出消费者组。触发rebalance机制，会造成性能开销。可以设置一次poll的消息条数少一点。<br> 三、rebalance：前提是没有指定分区，当消费组里的消费者和分区的关系发生变化时会触发rebalance机制<br>     1.range：通过公式计算消费者应该在哪个分区。前面的消费者是sum&#x2F;n+1，后面的消费者是sum&#x2F;n （分区总数&#x2F;消费者数）<br>     2.轮询：大家轮着消费<br>     3.sticky：在触发了rebalance后，在消费者消费的原分区不变的基础上进行调整<br> 四、HW和LEO<br>     HW高水位，去一个partition对应的ISR中修小的LEO（log-end-offset）作为HW，Consumer最多只能消费到HW所在的位置。另外每个replica都有HW，leader和follower负责更新自己的HW状态。对于leader新写入的消息，Consumer不能立刻消费，leader会等到所有isr中的replicas同步后更新HW，此时消息才能被消费。这样保证了如果leader所在的broker失效，该消息仍然可以从新选举的leader中获取。<br><img src="/images/zookeeper%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Kafka</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Kafka</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Kafka集群</title>
+    <link href="/2022/09/14/Kafka%E9%9B%86%E7%BE%A4/"/>
+    <url>/2022/09/14/Kafka%E9%9B%86%E7%BE%A4/</url>
+    
+    <content type="html"><![CDATA[<p> 一、副本<br>     副本是对分区的备份。在集群中，不同的副本会被部署在不同的broker上。<br>     　a.replicas：当前副本存在的broker节点<br>     　b.leader：副本里的概念 直接对它进行读写，然后备份到follower<br>     　c.follower：不提供读写，备份用 如果leader挂掉，参与新的leader选举<br>     　d.isr：可以同步和已同步的节点会被存到isr集合中，leader选举从此集合中选。如果isr中的节点性能较差，会被isr剔除集合。<br> 二、消费<br>     1.一个partition只能被一个消费组里的某一个消费这消费，从而保证消费顺序。kafka只在partition的范围内保证消息的局部顺序性，不能在同一个topic中的多个partition中保证总的消费顺序性。一个消费者可以消费多个partition。<br>     2.partition的数量决定了消费组中消费者的数量，建议同一个消费组中的消费者不要超过partition，多出来的消费者消费不到消息。<br>     3.如果消费者挂了，那么会触发rebalance机制，会让其他消费者来消费该分区。<br><img src="/images/kafka%E5%89%AF%E6%9C%AC.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Kafka</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Kafka</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Kafka消息</title>
+    <link href="/2022/09/09/Kafka%E6%B6%88%E6%81%AF/"/>
+    <url>/2022/09/09/Kafka%E6%B6%88%E6%81%AF/</url>
+    
+    <content type="html"><![CDATA[<p> 一、基本概念<br>     1.Broker：消息中间件处理节点，一个kafka节点就是一个broker，一个或多个Broker可以组成一个kafka集群。<br>     2.Topic：kafka根据topic对消息经行归类，发布到kafka集群的每条消息都需要指定一个topic。<br>     3.Producer：<br>     4.Consumer：<br>     5.ConsumerGroup：每个Consumer属于一个特定的消费组，一条消息可以被多个不同的消费组消息，但是一个消费组中只有一个消费者可以消费该消息。（单播和多播实现）<br>     6.Partition：物理上的概念，一个topic可以分为多个分区，每个分区内部消息是有序的。<font color="#660000">分区存储可以解决文件过大的问题，提高读写的吞吐量。</font><br> 二、消费消息<br>     kafka有两种消费消息的方式：<br>     　a.从当前主题的最后一条消息的offset（偏移量位置）+1开始消费。<br>     　b.从当前主题的第一条开始消费。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Kafka</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Kafka</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>ZookeeperCAP</title>
+    <link href="/2022/09/08/ZookeeperCAP/"/>
+    <url>/2022/09/08/ZookeeperCAP/</url>
+    
+    <content type="html"><![CDATA[<p> 一、CAP定理<br>     一个分布式系统最多只能同时满足一致性（COonsistency）、可用性（Availability）、和分区容错性（Partition tolerance）<br>     1.一致性：更新操作成功并返回客户端后，所有节点在同一时间的数据完全一致。<br>     2.可用性：服务一致可用，而且是正常响应时间<br>     3.分区容错性：分布式系统在遇到某节点或网络分区故障的时候，仍然可以对外提供满足一致性或可用性的服务。避免单点故障，就要进行冗余部署，冗余部署相当于是服务的分区，这样的分区就具备了容错性。<font color="#660000">（必须）</font></p><p> 二、BASE理论<br>     1.基本可用<br>     2.软状态<br>     3.最终一致性</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Zookeeper</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Zookeeper</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Zookeeper集群</title>
+    <link href="/2022/09/08/Zookeeper%E9%9B%86%E7%BE%A4/"/>
+    <url>/2022/09/08/Zookeeper%E9%9B%86%E7%BE%A4/</url>
+    
+    <content type="html"><![CDATA[<p> 一、ZAB协议<br>    解决了Zookeeper的崩溃恢复和主从数据同步问题。<br>    ZAB协议定义了节点的四种状态<br>    1.Looking：选举状态<br>    2.Following:Followe节点（从节点）所处的状态<br>    3.Leading：Leader节点（主节点）所处的状态<br>    4.Observing：观察者节点所处的状态</p><p><img src="/images/zookeeper%E9%9B%86%E7%BE%A4%E4%B8%BB%E8%8A%82%E7%82%B9%E9%80%89%E4%B8%BE.jpg"><br> 二、崩溃恢复时的Leader选举<br>    主节点会定时项从节点ping格式的空数据（socket），从节点会定时去读取这个信息，如果断掉则开始重新选举，此时集群不能对外提供服务。<br> 三、主从数据同步<br>    1.如果客户端连接的是从节点，即使写数据从节点也会把数据通信给主节点，<br>    2.由主节点把数据写到自己的数据文件中，并给自己返回一个ACK。<br>    3.主节点再把数据发送给Follower<br>    4.从节点将数据写道本地数据文件中<br>    5.从节点返回ACK给Leader<br>    6.Leader收到半数以上的ACK后向Follower发送Commit（半数以上是为了提高性能，整个集群的半数）<br>    7.从节点收到Commit后把数据文件中的数据写到内存中</p><p><img src="/images/zookeeper%E4%B8%BB%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Zookeeper</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Zookeeper</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Zookeeper分布式锁</title>
+    <link href="/2022/09/07/Zookeeper%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/"/>
+    <url>/2022/09/07/Zookeeper%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
+    
+    <content type="html"><![CDATA[<p> 一、节点类型<br>    1.持久节点<br>    2.临时节点<br>    3. 。。。。<br><img src="/images/zookeeper%E8%8A%82%E7%82%B9.jpg"><br> 二、数据持久化<br>     1.事务日志<br>     zk把执行的命令以日志的形式保存在dataLogDir指定的路径文件中（如果没有指定dataLogDir,则按dataDir指定的路径）<br>     2.数据快照<br>     zk会在一点的直接间隔内做一次内存数据的快照，把该时刻的内存数据保存在快照文件中。<br>   zk通过两种形式的持久化，在恢复时先恢复快照文件中的数据到内存中，在用日志文件的数据做增量恢复，这样的恢复速度更快。<br>    delete -v 0 &#x2F;node (删除版本为0的node节点，如果有其他人操作了该节点则删除失败-&gt;乐观锁删除)<br> 三、读锁和写锁<br>     1.读锁<br>     没有锁或者只有读锁的时候可以上锁成功（判断最小节点是否为读锁或者自己是最小节点）<br>     2.写锁<br>     没有锁的时候才能上锁成功（判断自己是否为最小节点）<br>     高并发时如果所有的节点都监听最小节点会出现多次判断的情况（羊群效应）此时链式监听结构会提高效率，（如链表）,只监听自己的上一级</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Zookeeper</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Zookeeper</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Zookeeper节点</title>
+    <link href="/2022/09/07/Zookeeper%E8%8A%82%E7%82%B9/"/>
+    <url>/2022/09/07/Zookeeper%E8%8A%82%E7%82%B9/</url>
+    
+    <content type="html"><![CDATA[<p> 一、节点类型<br>    1.持久节点<br>    2.临时节点<br>    3. 。。。。<br><img src="/images/zookeeper%E8%8A%82%E7%82%B9.jpg"><br> 二、数据持久化<br>     1.事务日志<br>     zk把执行的命令以日志的形式保存在dataLogDir指定的路径文件中（如果没有指定dataLogDir,则按dataDir指定的路径）<br>     2.数据快照<br>     zk会在一点的直接间隔内做一次内存数据的快照，把该时刻的内存数据保存在快照文件中。<br>   zk通过两种形式的持久化，在恢复时先恢复快照文件中的数据到内存中，在用日志文件的数据做增量恢复，这样的恢复速度更快。<br>    delete -v 0 &#x2F;node (删除版本为0的node节点，如果有其他人操作了该节点则删除失败-&gt;乐观锁删除)</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Zookeeper</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Zookeeper</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Zookeeper常用命令</title>
+    <link href="/2022/09/07/Zookeeper%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
+    <url>/2022/09/07/Zookeeper%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
+    
+    <content type="html"><![CDATA[<p>  1.重命名conf中的文件zoo_sample.cfg -&gt;zoo.cfg<br>​  2.启动zk服务器<br>    .&#x2F;bin&#x2F;zkServer.sh start .&#x2F;conf&#x2F;zoo.cfg<br>  3.查看zk服务器状态<br>    .&#x2F;bin&#x2F;zkServer.sh status .&#x2F;conf&#x2F;zoo.cfg<br>  4.停止zk服务器<br>    .&#x2F;bin&#x2F;zkServer.sh stop .&#x2F;conf&#x2F;zoo.cfg</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Zookeeper</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Zookeeper</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>简单工厂模式</title>
+    <link href="/2022/08/12/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/"/>
+    <url>/2022/08/12/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</url>
+    
+    <content type="html"><![CDATA[<p>​        是行为模式，其目的是用来定义对象间的一种一对多的依赖关系，以便当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。观察者塔式统通常被用来实现事件处理系统。在观察者模式中，主题是通知的发布者，它发出通知时并不需要知道谁是它的观察者，可以有任意数目的观察者订阅并接收通知。观察者模式不仅被广泛应用于软件界面元素之间的交互，在业务对象之间的交互、权限管理等方面也有广泛的应用。</p><p><img src="/images/%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F%E5%A4%A9%E6%B0%94%E9%A2%84%E6%8A%A5%E8%AE%BE%E8%AE%A1.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>设计模式</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>观察者模式</title>
+    <link href="/2022/08/12/%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F/"/>
+    <url>/2022/08/12/%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
+    
+    <content type="html"><![CDATA[<p>​        是行为模式，其目的是用来定义对象间的一种一对多的依赖关系，以便当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。观察者塔式统通常被用来实现事件处理系统。在观察者模式中，主题是通知的发布者，它发出通知时并不需要知道谁是它的观察者，可以有任意数目的观察者订阅并接收通知。观察者模式不仅被广泛应用于软件界面元素之间的交互，在业务对象之间的交互、权限管理等方面也有广泛的应用。</p><p><img src="/images/%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F%E5%A4%A9%E6%B0%94%E9%A2%84%E6%8A%A5%E8%AE%BE%E8%AE%A1.jpg"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>设计模式</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>单例模式</title>
+    <link href="/2022/08/12/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/"/>
+    <url>/2022/08/12/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/</url>
+    
+    <content type="html"><![CDATA[<pre><code class="hljs">是创建型模式，采取一定的方法保证在整个软件系统中，对某个类只能存在一个对象实例，并且该类只提供一个获取对象的方法。</code></pre><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment">* 这里只写三种推荐使用的方法</span><br><span class="hljs-comment">*/</span><br></code></pre></td></tr></table></figure><h4 id="懒汉式-双重检查"><a href="#懒汉式-双重检查" class="headerlink" title="懒汉式(双重检查)"></a>懒汉式(双重检查)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 懒汉式 双重检查</span><br><span class="hljs-comment"> * 推荐使用</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Singleton</span> &#123;<br>    <span class="hljs-comment">//volatile 等于一个轻量级的synchronized 会把修改值立即更新到主存</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">volatile</span> Singleton instance;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-title function_">Singleton</span><span class="hljs-params">()</span> &#123;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Singleton <span class="hljs-title function_">getInstance</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">if</span> (instance == <span class="hljs-literal">null</span>) &#123;<br>            <span class="hljs-keyword">synchronized</span> (Singleton.class) &#123;<br>                <span class="hljs-keyword">if</span> (instance == <span class="hljs-literal">null</span>) &#123;<br>                    instance = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Singleton</span>();<br>                &#125;<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">return</span> instance;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><h4 id="懒汉式-静态内部类"><a href="#懒汉式-静态内部类" class="headerlink" title="懒汉式(静态内部类)"></a>懒汉式(静态内部类)</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 懒汉式 静态内部类</span><br><span class="hljs-comment"> * 内部类线程安全 推荐使用</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Singleton</span> &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-title function_">Singleton</span><span class="hljs-params">()</span>&#123;&#125;<br>    <span class="hljs-comment">//装载Singleton的时候 静态内部类不会被装载  保证了懒加载</span><br>    <span class="hljs-comment">//JVM在装载类的时候是线程安全的</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">SingletonInstance</span>&#123;<br>        <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Singleton</span> <span class="hljs-variable">INSTANCE</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Singleton</span>();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Singleton <span class="hljs-title function_">getInstance</span><span class="hljs-params">()</span>&#123;<br>        <span class="hljs-keyword">return</span> SingletonInstance.INSTANCE;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><h4 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 枚举方法实现单例模式</span><br><span class="hljs-comment"> * 推荐使用</span><br><span class="hljs-comment"> * 不仅可以避免多线程问题，还能防止反序列化重新创建新的对象</span><br><span class="hljs-comment"> * 单例模式在对象需要被频繁创建销毁的时候使用，如一些工具类等情况，或者需要保持每次对象一直的时候使用</span><br><span class="hljs-comment"> * 每个人的剧本里都会有值得的事情，所以你才会选择这个剧本来到人世间，加油让这个事情早点遇到。</span><br><span class="hljs-comment"> */</span><br> <span class="hljs-keyword">enum</span> <span class="hljs-title class_">Singleton</span>&#123;<br>    INSTANCE;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">method</span><span class="hljs-params">()</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;OK&quot;</span>);<br>    &#125;<br>&#125;<br> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Test</span>&#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span>&#123;<br>        <span class="hljs-type">Singleton</span> <span class="hljs-variable">instance</span> <span class="hljs-operator">=</span> Singleton.INSTANCE;<br>        <span class="hljs-type">Singleton</span> <span class="hljs-variable">instance2</span> <span class="hljs-operator">=</span> Singleton.INSTANCE;<br>        System.out.println(instance == instance2);<span class="hljs-comment">// 可以得到是同一个对象</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>设计模式</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>设计原则</title>
+    <link href="/2022/08/12/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
+    <url>/2022/08/12/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</url>
+    
+    <content type="html"><![CDATA[<pre><code class="hljs">设计模式是世界上各种各样程序员用来解决特定设计问题的尝试和测试的方法。设计模式是代码可用性的延伸。</code></pre><h3 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h3><h4 id="1-单一职责"><a href="#1-单一职责" class="headerlink" title="1.单一职责"></a>1.单一职责</h4><pre><code class="hljs">它规定一个类应该只有一个发生变化的原因。</code></pre><h4 id="2-接口隔离原则"><a href="#2-接口隔离原则" class="headerlink" title="2.接口隔离原则"></a>2.接口隔离原则</h4><pre><code class="hljs">客户端不需要依赖它不需要的接口，即一个类对另一个类的依赖应该建立在最小的接口上。</code></pre><h4 id="3-依赖倒转原则"><a href="#3-依赖倒转原则" class="headerlink" title="3.依赖倒转原则"></a>3.依赖倒转原则</h4><pre><code class="hljs">1）高层模块不应该依赖底层模块，二者应该依赖其抽象。2）抽象不应该依赖细节，细节应该依赖抽象。3）依赖倒转的中心思想是面向接口编程。</code></pre><h4 id="4-里氏替换原则"><a href="#4-里氏替换原则" class="headerlink" title="4.里氏替换原则"></a>4.里氏替换原则</h4><pre><code class="hljs">所有引用基类的地方必须能透明的使用其子类对象，子类中尽量不要重写父类的方法，继承实际上让两个类的耦合性增强了，可以通过聚合，组合，依赖来解决。B--继承Base A--继承Base 不要B--直接继承A然后重写A方法。</code></pre><h4 id="4-开闭原责"><a href="#4-开闭原责" class="headerlink" title="4.开闭原责"></a>4.开闭原责</h4><pre><code class="hljs">**类、模块和函数应该对扩展开放，对修改关闭。当软件需要变化时，尽量通过扩展软件的实体来实现变化，不要修改已有的代码来实现**。</code></pre><h4 id="6-迪米特法则"><a href="#6-迪米特法则" class="headerlink" title="6.迪米特法则"></a>6.迪米特法则</h4><pre><code class="hljs">1）一个对象应该对其他对象保持最少的了解即**最少知道原则**。</code></pre><h4 id="7-合成复用原则"><a href="#7-合成复用原则" class="headerlink" title="7.合成复用原则"></a>7.合成复用原则</h4><pre><code class="hljs">尽量使用合成/聚合的方式，而不是使用继承。</code></pre>]]></content>
+    
+    
+    <categories>
+      
+      <category>设计模式</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Java</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Hello Hexo</title>
+    <link href="/2022/08/11/hello-hexo/"/>
+    <url>/2022/08/11/hello-hexo/</url>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  
+</search>
