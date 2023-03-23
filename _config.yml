@@ -103,4 +103,6 @@ theme: Fluid
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
-  type: ''
+  type: git
+  repo: git@github.com:Js-git-source/Js-git-source.github.io.git
+  branch: main
